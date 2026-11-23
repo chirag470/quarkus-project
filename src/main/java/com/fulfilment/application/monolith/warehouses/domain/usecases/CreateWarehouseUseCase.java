@@ -40,12 +40,24 @@ public class CreateWarehouseUseCase implements CreateWarehouseOperation {
       throw new IllegalArgumentException("location is required");
     }
 
+    Location fetchedLocation = null;
     try {
-      Location fetchedLocation = locationResolver.resolveByIdentifier(data.getLocation());
+      fetchedLocation = locationResolver.resolveByIdentifier(data.getLocation());
     } catch (NoSuchElementException nee) {
       throw new IllegalArgumentException("Invalid location");
     }
 
+    if (fetchedLocation != null) {
+      if (fetchedLocation.locationWarehouseMap.size() >= fetchedLocation.maxNumberOfWarehouses) {
+        throw new IllegalArgumentException("Maximum number of warehouses reached for the specified location");}
+
+/*
+      int totaSizeReached = fetchedLocation.locationWarehouseMap.values().stream().map(warehouse -> warehouse.capacity).sum();
+      if (totaSizeReached + data.getCapacity() > fetchedLocation.maxCapacity) {
+        throw new IllegalArgumentException("Maximum capacity reached for the specified location");
+      }
+*/
+    }
 
     // if all went well, create the warehouse
     return warehouseStore.create(data);

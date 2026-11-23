@@ -38,22 +38,22 @@ public class WarehouseResourceImpl implements WarehouseResource {
   }
 
   @Override
-  public Warehouse getAWarehouseUnitByID(String identifier) {
+  public Warehouse getAWarehouseUnitByBusinessUnitCode(String businessUnitCode) {
     // TODO Auto-generated method stub
 
     Warehouse selectedWarehouse = warehouseStore.getAll().stream()
-            .filter(warehouse -> warehouse.getBusinessUnitCode().equals(identifier))
+            .filter(warehouse -> warehouse.getBusinessUnitCode().equals(businessUnitCode))
             .findFirst()
-            .orElseThrow(() -> new NoSuchElementException(String.format("Warehouse not found with identifier: %s", identifier)));
+            .orElseThrow(() -> new NoSuchElementException(String.format("Warehouse not found with identifier: %s", businessUnitCode)));
 
     return this.toWarehouseResponse(selectedWarehouse);
     //throw new UnsupportedOperationException("Unimplemented method 'getAWarehouseUnitByID'");
   }
 
   @Override
-  public void archiveAWarehouseUnitByID(String id) {
+  public void archiveAWarehouseUnitByBusinessUnitCode(String businessUnitCode) {
     // TODO Auto-generated method stub
-    archiveWarehouseOperation.archive(warehouseStore.findByBusinessUnitCode(id));
+    archiveWarehouseOperation.archive(warehouseStore.findByBusinessUnitCode(businessUnitCode));
     //throw new UnsupportedOperationException("Unimplemented method 'archiveAWarehouseUnitByID'");
   }
 

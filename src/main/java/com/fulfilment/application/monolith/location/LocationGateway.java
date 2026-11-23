@@ -2,11 +2,10 @@ package com.fulfilment.application.monolith.location;
 
 import com.fulfilment.application.monolith.warehouses.domain.models.Location;
 import com.fulfilment.application.monolith.warehouses.domain.ports.LocationResolver;
+import com.warehouse.api.beans.Warehouse;
 import jakarta.enterprise.context.ApplicationScoped;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import static io.quarkus.hibernate.orm.panache.PanacheEntity_.id;
 
@@ -25,6 +24,7 @@ public class LocationGateway implements LocationResolver {
     locations.add(new Location("EINDHOVEN-001", 2, 70));
     locations.add(new Location("VETSBY-001", 1, 90));
   }
+
 
   @Override
   public Location resolveByIdentifier(String identifier) {
