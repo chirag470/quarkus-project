@@ -14,7 +14,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @QuarkusTest
-public class StoreEndpointIT {
+public class StoreEndpointIntegTest {
 
   private static final String PATH = "store";
 
