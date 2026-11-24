@@ -9,7 +9,10 @@ import com.fulfilment.application.monolith.warehouses.domain.ports.WarehouseStor
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import java.util.NoSuchElementException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class CreateWarehouseUseCase implements CreateWarehouseOperation {
@@ -43,23 +46,34 @@ public class CreateWarehouseUseCase implements CreateWarehouseOperation {
     Location fetchedLocation = null;
     try {
       fetchedLocation = locationResolver.resolveByIdentifier(data.getLocation());
-    } catch (NoSuchElementException nee) {
-      throw new IllegalArgumentException("Invalid location");
+    } catch (Exception e) {
+      throw new IllegalArgumentException("Location could not be fetched while warehouse creation");
     }
 
-    if (fetchedLocation != null) {
-      if (fetchedLocation.locationWarehouseMap.size() >= fetchedLocation.maxNumberOfWarehouses) {
-        throw new IllegalArgumentException("Maximum number of warehouses reached for the specified location");}
+    List<Warehouse> locationWarehouses = locationResolver.getWarehousesLocationMap()
+                .get(data.getLocation())
+                .stream()
+                .filter(warehouse -> Boolean.TRUE.equals(warehouse.getIsArchived()))
+                .toList();
 
-/*
-      int totaSizeReached = fetchedLocation.locationWarehouseMap.values().stream().map(warehouse -> warehouse.capacity).sum();
-      if (totaSizeReached + data.getCapacity() > fetchedLocation.maxCapacity) {
-        throw new IllegalArgumentException("Maximum capacity reached for the specified location");
-      }
-*/
+    if (locationWarehouses.size() >= fetchedLocation.maxNumberOfWarehouses) {
+      throw new IllegalArgumentException("Maximum number of warehouses reached for the specified location");
+    }
+
+    int currentSizeOfLocation =
+        locationWarehouses
+                .stream()
+                .filter(warehouse -> Boolean.TRUE.equals(warehouse.getIsArchived()))
+                .mapToInt(Warehouse::getCapacity)
+                .sum();
+    if (currentSizeOfLocation + data.getCapacity() > fetchedLocation.maxCapacity) {
+      throw new IllegalArgumentException("Maximum capacity reached for the specified location");
     }
 
     // if all went well, create the warehouse
-    return warehouseStore.create(data);
+    Warehouse warehouse = warehouseStore.create(data);
+    List<Warehouse> warehouses = locationResolver.getWarehousesLocationMap().get(fetchedLocation.identification);
+    warehouses.add(warehouse);
+    return warehouse;
   }
 }

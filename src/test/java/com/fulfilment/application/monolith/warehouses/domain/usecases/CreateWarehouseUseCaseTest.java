@@ -1,5 +1,6 @@
 package com.fulfilment.application.monolith.warehouses.domain.usecases;
 
+import com.fulfilment.application.monolith.location.LocationGateway;
 import com.fulfilment.application.monolith.warehouses.domain.models.Location;
 import com.fulfilment.application.monolith.warehouses.domain.ports.LocationResolver;
 import com.fulfilment.application.monolith.warehouses.domain.ports.WarehouseStore;
@@ -22,8 +23,11 @@ public class CreateWarehouseUseCaseTest {
   @Test
   void createsWarehouseWhenDataIsValid() {
     WarehouseStore store = mock(WarehouseStore.class);
-    LocationResolver resolver = identifier ->
-        new Location(identifier, 5, 1000);
+    LocationResolver resolver = mock(LocationResolver.class);
+    when(resolver.resolveByIdentifier("AMSTERDAM-001"))
+        .thenReturn(new Location("AMSTERDAM-001", 5, 1000));
+    when(resolver.getWarehousesLocationMap())
+        .thenReturn(Collections.singletonMap("AMSTERDAM-001", Collections.emptyList()));
     CreateWarehouseUseCase useCase = new CreateWarehouseUseCase(store, resolver);
     Warehouse warehouse = warehouse("MWH-NEW", "AMSTERDAM-001", 100, 20);
     when(store.getAll()).thenReturn(Collections.emptyList());
@@ -33,6 +37,7 @@ public class CreateWarehouseUseCaseTest {
 
     assertSame(warehouse, created);
     verify(store).create(warehouse);
+    verify(resolver).getWarehousesLocationMap();
   }
 
   @Test
@@ -40,8 +45,9 @@ public class CreateWarehouseUseCaseTest {
     WarehouseStore store = mock(WarehouseStore.class);
     when(store.getAll()).thenReturn(List.of(
         warehouse("MWH-EXISTING", "AMSTERDAM-001", 100, 20)));
-    LocationResolver resolver = identifier ->
-        new Location(identifier, 5, 1000);
+    LocationResolver resolver = mock(LocationResolver.class);
+    when(resolver.resolveByIdentifier("ROTTERDAM-001"))
+        .thenReturn(new Location("ROTTERDAM-001", 5, 1000));
     CreateWarehouseUseCase useCase = new CreateWarehouseUseCase(store, resolver);
 
     IllegalArgumentException exception = assertThrows(
@@ -56,7 +62,7 @@ public class CreateWarehouseUseCaseTest {
   void rejectsMissingLocation() {
     CreateWarehouseUseCase useCase = new CreateWarehouseUseCase(
         mock(WarehouseStore.class),
-        identifier -> new Location(identifier, 5, 1000));
+        mock(LocationResolver.class));
     Warehouse warehouse = warehouse("MWH-NEW", null, 100, 20);
 
     IllegalArgumentException exception = assertThrows(
@@ -68,18 +74,19 @@ public class CreateWarehouseUseCaseTest {
 
   @Test
   void rejectsInvalidLocation() {
+    LocationResolver resolver = mock(LocationResolver.class);
+    when(resolver.resolveByIdentifier("UNKNOWN-001"))
+        .thenThrow(new java.util.NoSuchElementException());
     CreateWarehouseUseCase useCase = new CreateWarehouseUseCase(
         mock(WarehouseStore.class),
-        identifier -> {
-          throw new java.util.NoSuchElementException();
-        });
+        resolver);
     Warehouse warehouse = warehouse("MWH-NEW", "UNKNOWN-001", 100, 20);
 
     IllegalArgumentException exception = assertThrows(
         IllegalArgumentException.class,
         () -> useCase.create(warehouse));
 
-    assertEquals("Invalid location", exception.getMessage());
+    assertEquals("Location could not be fetched while warehouse creation", exception.getMessage());
   }
 
   private static Warehouse warehouse(String businessUnitCode, String location,

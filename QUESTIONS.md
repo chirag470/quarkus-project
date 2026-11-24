@@ -35,3 +35,9 @@ Cons of OpenAPI spec and code generation:
   As low priority tasks, tickets can be picked up for meeting the coverage mark criteria from time to time.
     
 ```
+
+``` ** Few other points for refactoring **:
+1. The package sturcture is not separating models, db operations, resources properly. Currently adapters contains the restapi package which is wrong place. All rest operations should be in separate package. Also, domain package contains the usecase implementations, which is not correct. Usecases should be in separate package. Domain package should contain only the models and ports.
+2. Location is stored as a static list. It should be stored in DB.
+3. Access modifiers in many places are public like Store, Location. They should be private along with getters,setters. 
+```

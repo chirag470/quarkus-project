@@ -22,5 +22,6 @@ public class ArchiveWarehouseUseCase implements ArchiveWarehouseOperation {
     // TODO implement this method
 
     warehouseStore.remove(warehouse);
+
   }
 }
