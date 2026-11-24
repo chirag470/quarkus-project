@@ -29,9 +29,8 @@ public class LocationGatewayTest {
     Warehouse warehouse = new Warehouse();
     warehouse.setBusinessUnitCode("MWH-001");
 
-    List<Warehouse> warehouseList = locationGateway.getWarehousesLocationMap().getOrDefault("ZWOLLE-001", new ArrayList<>());
+    List<Warehouse> warehouseList = locationGateway.getWarehousesLocationMap().get("ZWOLLE-001");
     warehouseList.add(warehouse);
-    locationGateway.getWarehousesLocationMap().put("ZWOLLE-001", warehouseList);
     assertEquals(1, locationGateway.getWarehousesLocationMap().get("ZWOLLE-001").size());
   }
 }

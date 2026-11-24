@@ -7,16 +7,12 @@ import com.fulfilment.application.monolith.warehouses.domain.ports.WarehouseStor
 import com.warehouse.api.beans.Warehouse;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.*;
 
 public class CreateWarehouseUseCaseTest {
 
@@ -26,8 +22,10 @@ public class CreateWarehouseUseCaseTest {
     LocationResolver resolver = mock(LocationResolver.class);
     when(resolver.resolveByIdentifier("AMSTERDAM-001"))
         .thenReturn(new Location("AMSTERDAM-001", 5, 1000));
+    Map<String, List<Warehouse>> locationMap = new HashMap<>();
+    locationMap.put("AMSTERDAM-001", new ArrayList<>());
     when(resolver.getWarehousesLocationMap())
-        .thenReturn(Collections.singletonMap("AMSTERDAM-001", Collections.emptyList()));
+        .thenReturn(locationMap);
     CreateWarehouseUseCase useCase = new CreateWarehouseUseCase(store, resolver);
     Warehouse warehouse = warehouse("MWH-NEW", "AMSTERDAM-001", 100, 20);
     when(store.getAll()).thenReturn(Collections.emptyList());
@@ -37,7 +35,7 @@ public class CreateWarehouseUseCaseTest {
 
     assertSame(warehouse, created);
     verify(store).create(warehouse);
-    verify(resolver).getWarehousesLocationMap();
+    verify(resolver, times(2)).getWarehousesLocationMap();
   }
 
   @Test
