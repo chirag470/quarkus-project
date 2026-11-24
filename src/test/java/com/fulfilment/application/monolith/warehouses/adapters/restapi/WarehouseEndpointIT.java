@@ -8,7 +8,7 @@ import io.quarkus.test.junit.QuarkusIntegrationTest;
 import org.junit.jupiter.api.Test;
 
 @QuarkusIntegrationTest
-public class WarehouseEndpointIntegTest {
+public class WarehouseEndpointIT {
 
   @Test
   public void testSimpleListWarehouses() {

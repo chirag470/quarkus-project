@@ -1,29 +1,31 @@
 package com.fulfilment.application.monolith.warehouses.domain.usecases;
 
+import com.fulfilment.application.monolith.location.LocationGateway;
 import com.fulfilment.application.monolith.warehouses.domain.models.Location;
 import com.fulfilment.application.monolith.warehouses.domain.ports.LocationResolver;
 import com.fulfilment.application.monolith.warehouses.domain.ports.WarehouseStore;
 import com.warehouse.api.beans.Warehouse;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.*;
 
 public class CreateWarehouseUseCaseTest {
 
   @Test
   void createsWarehouseWhenDataIsValid() {
     WarehouseStore store = mock(WarehouseStore.class);
-    LocationResolver resolver = identifier ->
-        new Location(identifier, 5, 1000);
+    LocationResolver resolver = mock(LocationResolver.class);
+    when(resolver.resolveByIdentifier("AMSTERDAM-001"))
+        .thenReturn(new Location("AMSTERDAM-001", 5, 1000));
+    Map<String, List<Warehouse>> locationMap = new HashMap<>();
+    locationMap.put("AMSTERDAM-001", new ArrayList<>());
+    when(resolver.getWarehousesLocationMap())
+        .thenReturn(locationMap);
     CreateWarehouseUseCase useCase = new CreateWarehouseUseCase(store, resolver);
     Warehouse warehouse = warehouse("MWH-NEW", "AMSTERDAM-001", 100, 20);
     when(store.getAll()).thenReturn(Collections.emptyList());
@@ -33,6 +35,7 @@ public class CreateWarehouseUseCaseTest {
 
     assertSame(warehouse, created);
     verify(store).create(warehouse);
+    verify(resolver, times(2)).getWarehousesLocationMap();
   }
 
   @Test
@@ -40,8 +43,9 @@ public class CreateWarehouseUseCaseTest {
     WarehouseStore store = mock(WarehouseStore.class);
     when(store.getAll()).thenReturn(List.of(
         warehouse("MWH-EXISTING", "AMSTERDAM-001", 100, 20)));
-    LocationResolver resolver = identifier ->
-        new Location(identifier, 5, 1000);
+    LocationResolver resolver = mock(LocationResolver.class);
+    when(resolver.resolveByIdentifier("ROTTERDAM-001"))
+        .thenReturn(new Location("ROTTERDAM-001", 5, 1000));
     CreateWarehouseUseCase useCase = new CreateWarehouseUseCase(store, resolver);
 
     IllegalArgumentException exception = assertThrows(
@@ -56,7 +60,7 @@ public class CreateWarehouseUseCaseTest {
   void rejectsMissingLocation() {
     CreateWarehouseUseCase useCase = new CreateWarehouseUseCase(
         mock(WarehouseStore.class),
-        identifier -> new Location(identifier, 5, 1000));
+        mock(LocationResolver.class));
     Warehouse warehouse = warehouse("MWH-NEW", null, 100, 20);
 
     IllegalArgumentException exception = assertThrows(
@@ -68,18 +72,19 @@ public class CreateWarehouseUseCaseTest {
 
   @Test
   void rejectsInvalidLocation() {
+    LocationResolver resolver = mock(LocationResolver.class);
+    when(resolver.resolveByIdentifier("UNKNOWN-001"))
+        .thenThrow(new java.util.NoSuchElementException());
     CreateWarehouseUseCase useCase = new CreateWarehouseUseCase(
         mock(WarehouseStore.class),
-        identifier -> {
-          throw new java.util.NoSuchElementException();
-        });
+        resolver);
     Warehouse warehouse = warehouse("MWH-NEW", "UNKNOWN-001", 100, 20);
 
     IllegalArgumentException exception = assertThrows(
         IllegalArgumentException.class,
         () -> useCase.create(warehouse));
 
-    assertEquals("Invalid location", exception.getMessage());
+    assertEquals("Location could not be fetched while warehouse creation", exception.getMessage());
   }
 
   private static Warehouse warehouse(String businessUnitCode, String location,

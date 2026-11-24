@@ -24,6 +24,7 @@ public class WarehouseRepository implements WarehouseStore, PanacheRepository<Db
   @Transactional
   public Warehouse create(Warehouse warehouse) {
     DbWarehouse entity = toEntity(warehouse);
+
     persist(entity);
     return entity.toWarehouse();
   }
