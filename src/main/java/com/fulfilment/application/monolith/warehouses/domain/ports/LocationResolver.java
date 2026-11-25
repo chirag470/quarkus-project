@@ -8,5 +8,4 @@ import java.util.Map;
 
 public interface LocationResolver {
   Location resolveByIdentifier(String identifier);
-  Map<String, List<Warehouse>> getWarehousesLocationMap();
 }

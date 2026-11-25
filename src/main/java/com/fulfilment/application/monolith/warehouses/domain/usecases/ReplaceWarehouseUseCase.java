@@ -16,12 +16,14 @@ public class ReplaceWarehouseUseCase implements ReplaceWarehouseOperation {
 
   private final WarehouseStore warehouseStore;
   private final ArchiveWarehouseOperation archiveWarehouseOperation;
+  private final CreateWarehouseUseCase createWarehouseUseCase;
 
   @Inject
-  public ReplaceWarehouseUseCase(WarehouseStore warehouseStore, ArchiveWarehouseOperation archiveWarehouseOperation) {
+  public ReplaceWarehouseUseCase(WarehouseStore warehouseStore, ArchiveWarehouseOperation archiveWarehouseOperation, CreateWarehouseUseCase createWarehouseUseCase) {
     this.warehouseStore = warehouseStore;
     this.archiveWarehouseOperation = archiveWarehouseOperation;
-  }
+      this.createWarehouseUseCase = createWarehouseUseCase;
+    }
 
   @Override
   public void replace(String businessUnitCode, Warehouse newWarehouse) {
@@ -45,7 +47,7 @@ public class ReplaceWarehouseUseCase implements ReplaceWarehouseOperation {
     archiveWarehouseOperation.archive(currentWarehouse);
 
     newWarehouse.setBusinessUnitCode(businessUnitCode);
-    Warehouse createdWarehouse = warehouseStore.create(newWarehouse);
+    Warehouse createdWarehouse = createWarehouseUseCase.create(newWarehouse);
     createdWarehouse.setStock(currentWarehouse.getStock()); // Stock transferred and matched
     warehouseStore.update(createdWarehouse);
   }

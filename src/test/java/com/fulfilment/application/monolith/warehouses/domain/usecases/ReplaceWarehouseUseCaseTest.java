@@ -21,21 +21,22 @@ public class ReplaceWarehouseUseCaseTest {
   void replacesWarehouseAndTransfersStock() {
     WarehouseStore store = mock(WarehouseStore.class);
     ArchiveWarehouseOperation archive = mock(ArchiveWarehouseOperation.class);
+    CreateWarehouseUseCase create = mock(CreateWarehouseUseCase.class);
     Warehouse current = warehouse("MWH-001", "AMSTERDAM-001", 100, 40);
     when(store.findByBusinessUnitCode("MWH-001")).thenReturn(current);
     Warehouse replacement = warehouse(null, "AMSTERDAM-001", 150, 999);
-    when(store.create(replacement)).thenReturn(replacement);
+    when(create.create(replacement)).thenReturn(replacement);
     doAnswer(invocation -> {
       Warehouse archivedWarehouse = invocation.getArgument(0);
       archivedWarehouse.setIsArchived(true);
       return null;
     }).when(archive).archive(any(Warehouse.class));
-    ReplaceWarehouseUseCase useCase = new ReplaceWarehouseUseCase(store, archive);
+    ReplaceWarehouseUseCase useCase = new ReplaceWarehouseUseCase(store, archive, create);
 
     useCase.replace("MWH-001", replacement);
 
     verify(archive).archive(current);
-    verify(store).create(replacement);
+    verify(create).create(replacement);
     verify(store).update(replacement);
     assertTrue(current.getIsArchived());
     assertEquals("MWH-001", replacement.getBusinessUnitCode());
@@ -47,10 +48,12 @@ public class ReplaceWarehouseUseCaseTest {
   void rejectsReplacementAtAnotherLocation() {
     WarehouseStore store = mock(WarehouseStore.class);
     ArchiveWarehouseOperation archive = mock(ArchiveWarehouseOperation.class);
+    CreateWarehouseUseCase create = mock(CreateWarehouseUseCase.class);
+
     Warehouse current = warehouse("MWH-001", "AMSTERDAM-001", 100, 40);
     when(store.findByBusinessUnitCode("MWH-001")).thenReturn(current);
     ReplaceWarehouseUseCase useCase =
-        new ReplaceWarehouseUseCase(store, archive);
+        new ReplaceWarehouseUseCase(store, archive, create);
 
     Warehouse replacement = warehouse(null, "ROTTERDAM-001", 150, 40);
 
@@ -60,7 +63,7 @@ public class ReplaceWarehouseUseCaseTest {
 
     assertEquals("Location should be same for replacement", exception.getMessage());
     verify(archive, never()).archive(any(Warehouse.class));
-    verify(store, never()).create(any(Warehouse.class));
+    verify(create, never()).create(any(Warehouse.class));
   }
 
   @Test
@@ -69,8 +72,9 @@ public class ReplaceWarehouseUseCaseTest {
     ArchiveWarehouseOperation archive = mock(ArchiveWarehouseOperation.class);
     Warehouse current = warehouse("MWH-001", "AMSTERDAM-001", 100, 40);
     when(store.findByBusinessUnitCode("MWH-001")).thenReturn(current);
+    CreateWarehouseUseCase create = mock(CreateWarehouseUseCase.class);
     ReplaceWarehouseUseCase useCase =
-        new ReplaceWarehouseUseCase(store, archive);
+        new ReplaceWarehouseUseCase(store, archive, create);
 
     Warehouse replacement = warehouse(null, "AMSTERDAM-001", 30, 40);
 
@@ -81,7 +85,7 @@ public class ReplaceWarehouseUseCaseTest {
     assertEquals("New capacity can not accommodate the stock of warehouse to be archived",
         exception.getMessage());
     verify(archive, never()).archive(any(Warehouse.class));
-    verify(store, never()).create(any(Warehouse.class));
+    verify(create, never()).create(any(Warehouse.class));
   }
 
   private static Warehouse warehouse(String businessUnitCode, String location,

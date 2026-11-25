@@ -6,8 +6,10 @@ import com.fulfilment.application.monolith.warehouses.domain.ports.WarehouseStor
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.NotFoundException;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @ApplicationScoped
 public class WarehouseRepository implements WarehouseStore, PanacheRepository<DbWarehouse> {
@@ -34,7 +36,7 @@ public class WarehouseRepository implements WarehouseStore, PanacheRepository<Db
   public void update(Warehouse warehouse) {
     DbWarehouse entity = find("businessUnitCode = ?1 and isArchived = false", warehouse.getBusinessUnitCode()).firstResult();
     if (entity == null) {
-      throw new NotFoundException("Active warehouse not found with business unit code: " + warehouse.getBusinessUnitCode());
+      throw new NoSuchElementException("Active warehouse not found with business unit code: " + warehouse.getBusinessUnitCode());
     }
 
     toEntity(warehouse, entity);
@@ -45,7 +47,7 @@ public class WarehouseRepository implements WarehouseStore, PanacheRepository<Db
   public void remove(Warehouse warehouse) {
     DbWarehouse entity = find("businessUnitCode = ?1 and isArchived = false", warehouse.getBusinessUnitCode()).firstResult();
     if (entity == null) {
-      throw new NotFoundException("Active warehouse not found with business unit code: " + warehouse.getBusinessUnitCode());
+      throw new NoSuchElementException("Active warehouse not found with business unit code: " + warehouse.getBusinessUnitCode());
     }
     /*
       Note:
@@ -62,10 +64,19 @@ public class WarehouseRepository implements WarehouseStore, PanacheRepository<Db
     return find("businessUnitCode = ?1 and isArchived = false", businessUnitCode)
         .firstResultOptional()
         .map(DbWarehouse::toWarehouse)
-        .orElseThrow(() -> new NotFoundException("Active warehouse not found with business unit code: " + businessUnitCode));
+        .orElseThrow(() -> new NoSuchElementException("Active warehouse not found with business unit code: " + businessUnitCode));
   }
 
-  private DbWarehouse toEntity(Warehouse warehouse) {
+  @Override
+  public List<Warehouse> findByLocation(String locationIdentifier) {
+    return find("location = ?1 and isArchived = false", locationIdentifier)
+        .list()
+        .stream()
+        .map(DbWarehouse::toWarehouse)
+        .toList();
+  }
+
+    private DbWarehouse toEntity(Warehouse warehouse) {
     DbWarehouse entity = new DbWarehouse();
     toEntity(warehouse, entity);
     return entity;
@@ -75,7 +86,6 @@ public class WarehouseRepository implements WarehouseStore, PanacheRepository<Db
     target.businessUnitCode = source.getBusinessUnitCode();
     target.location = source.getLocation();
     target.capacity = source.getCapacity();
-    target.isArchived = source.getIsArchived();
     target.stock = source.getStock();
   }
 }

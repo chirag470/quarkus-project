@@ -1,13 +1,12 @@
 package com.fulfilment.application.monolith.warehouses.domain.usecases;
 
-import com.fulfilment.application.monolith.location.LocationGateway;
 import com.fulfilment.application.monolith.warehouses.domain.models.Location;
 import com.fulfilment.application.monolith.warehouses.domain.ports.LocationResolver;
 import com.fulfilment.application.monolith.warehouses.domain.ports.WarehouseStore;
 import com.warehouse.api.beans.Warehouse;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -22,20 +21,17 @@ public class CreateWarehouseUseCaseTest {
     LocationResolver resolver = mock(LocationResolver.class);
     when(resolver.resolveByIdentifier("AMSTERDAM-001"))
         .thenReturn(new Location("AMSTERDAM-001", 5, 1000));
-    Map<String, List<Warehouse>> locationMap = new HashMap<>();
-    locationMap.put("AMSTERDAM-001", new ArrayList<>());
-    when(resolver.getWarehousesLocationMap())
-        .thenReturn(locationMap);
     CreateWarehouseUseCase useCase = new CreateWarehouseUseCase(store, resolver);
     Warehouse warehouse = warehouse("MWH-NEW", "AMSTERDAM-001", 100, 20);
-    when(store.getAll()).thenReturn(Collections.emptyList());
+    when(store.getAll()).thenReturn(List.of());
+    when(store.findByLocation("AMSTERDAM-001")).thenReturn(List.of());
     when(store.create(warehouse)).thenReturn(warehouse);
 
     Warehouse created = useCase.create(warehouse);
 
     assertSame(warehouse, created);
     verify(store).create(warehouse);
-    verify(resolver, times(2)).getWarehousesLocationMap();
+    verify(store).findByLocation("AMSTERDAM-001");
   }
 
   @Test
@@ -85,6 +81,44 @@ public class CreateWarehouseUseCaseTest {
         () -> useCase.create(warehouse));
 
     assertEquals("Location could not be fetched while warehouse creation", exception.getMessage());
+  }
+
+  @Test
+  void rejectsWarehouseWhenLocationWarehouseLimitIsReached() {
+    WarehouseStore store = mock(WarehouseStore.class);
+    LocationResolver resolver = mock(LocationResolver.class);
+    when(store.getAll()).thenReturn(List.of());
+    when(resolver.resolveByIdentifier("AMSTERDAM-001"))
+        .thenReturn(new Location("AMSTERDAM-001", 1, 1000));
+    when(store.findByLocation("AMSTERDAM-001"))
+        .thenReturn(List.of(warehouse("MWH-EXISTING", "AMSTERDAM-001", 100, 20)));
+    CreateWarehouseUseCase useCase = new CreateWarehouseUseCase(store, resolver);
+
+    IllegalArgumentException exception = assertThrows(
+        IllegalArgumentException.class,
+        () -> useCase.create(warehouse("MWH-NEW", "AMSTERDAM-001", 100, 20)));
+
+    assertEquals("Maximum number of warehouses reached for the specified location", exception.getMessage());
+    verify(store, never()).create(org.mockito.ArgumentMatchers.any(Warehouse.class));
+  }
+
+  @Test
+  void rejectsWarehouseWhenLocationCapacityWouldBeExceeded() {
+    WarehouseStore store = mock(WarehouseStore.class);
+    LocationResolver resolver = mock(LocationResolver.class);
+    when(store.getAll()).thenReturn(List.of());
+    when(resolver.resolveByIdentifier("AMSTERDAM-001"))
+        .thenReturn(new Location("AMSTERDAM-001", 5, 1000));
+    when(store.findByLocation("AMSTERDAM-001"))
+        .thenReturn(List.of(warehouse("MWH-EXISTING", "AMSTERDAM-001", 950, 20)));
+    CreateWarehouseUseCase useCase = new CreateWarehouseUseCase(store, resolver);
+
+    IllegalArgumentException exception = assertThrows(
+        IllegalArgumentException.class,
+        () -> useCase.create(warehouse("MWH-NEW", "AMSTERDAM-001", 100, 20)));
+
+    assertEquals("Maximum capacity reached for the specified location", exception.getMessage());
+    verify(store, never()).create(org.mockito.ArgumentMatchers.any(Warehouse.class));
   }
 
   private static Warehouse warehouse(String businessUnitCode, String location,

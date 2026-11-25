@@ -23,3 +23,8 @@ java -version
 
 ### Note
 The quarkus app uses h2 in memory database in dev mode, so dependency postgres is not required in testing phase
+
+
+### Theory solutions
+Refer to QUESTIONS.md and CASE_STUDY.md
+
