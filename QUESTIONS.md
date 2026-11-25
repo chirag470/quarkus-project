@@ -6,7 +6,10 @@ Here we have 3 questions related to the code base for you to answer. It is not a
 
 **Answer:**
 ```txt
-Yes, the implementation used for Warehouse part is the most appropriate among all. It clearly separates the Resource layer, the business layer and the DAO layer. Also it clearly defines the ports and adapters, which is a good practice as per hexagonal architecture. The other parts of the code like store, location are not as well written.THere is no separation of concerns and modularity. Business logic also depends on an interface in the form of ports. The actualimplementation ispart of adapters, which can be changed in future in case of DB migration. 
+Yes, the implementation used for Warehouse part is the most appropriate among all. It clearly separates the Resource layer, the business layer and the DAO layer. 
+Also it clearly defines the ports and adapters, which is a good practice as per hexagonal architecture. The other parts of the code like store, location are not as well written.
+THere is no separation of concerns and modularity. Business logic also depends on an interface in the form of ports. 
+The actualimplementation is part of adapters, which can be changed in future in case of DB migration. 
 ```
 ----
 2. When it comes to API spec and endpoints handlers, we have an Open API yaml file for the `Warehouse` API from which we generate code, but for the other endpoints - `Product` and `Store` - we just coded directly everything. What would be your thoughts about what are the pros and cons of each approach and what would be your choice?
@@ -36,8 +39,11 @@ Cons of OpenAPI spec and code generation:
     
 ```
 
-``` ** Few other points for refactoring **:
-1. The package sturcture is not separating models, db operations, resources properly. Currently adapters contains the restapi package which is wrong place. All rest operations should be in separate package. Also, domain package contains the usecase implementations, which is not correct. Usecases should be in separate package. Domain package should contain only the models and ports.
+```
+ ** Few other points for refactoring **:
+1. The package sturcture is not separating models, db operations, resources properly. Currently adapters contains the restapi package which is wrong place. 
+All rest operations should be in separate package. Also, domain package contains the usecase implementations, which is not correct.
+Usecases should be in separate package. Domain package should contain only the models and ports.
 2. Location is stored as a static list. It should be stored in DB.
 3. Access modifiers in many places are public like Store, Location. They should be private along with getters,setters. 
-```
+ 

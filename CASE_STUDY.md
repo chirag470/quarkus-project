@@ -111,6 +111,19 @@ Things take into account designing a system to support accurate budgeting and fo
 
 **Questions you may have and considerations:**
 
+**Answer**
+Cost control aspects of replacing warehouse:
+1. Relocation and transportation of inventory.
+2. New warehouse setup, govt procedures, lease aggreeents and infrastructure.
+3. Employee relocation or re-recruitment.
+4. Temporary overlapping operational costs.
+
+Why is preserving cost history important?
+1. Allows the company to understand how much it previously spent on operating the old warehouse, including rent, labor, transportation and overhead
+2. Historical expenses provide a refernce for estimating the new warehouse's operating budget.
+3. Archived cost records are important for financial reportingon year end, audits and investigating past expenses.
+4. Helps compare the operational costs of the old and new warehouses and determine whether the replacement has improved cost or not.
+
 
 ## Instructions for Candidates
 Before starting the case study, read the [BRIEFING.md](BRIEFING.md) to quickly understand the domain, entities, business rules, and other relevant details.

@@ -1,12 +1,11 @@
 
 ### How to run instructions
 
-*1. Commands to set java home* 
+*1. Set java home* 
 
 $env:JAVA_HOME = "C:\path\to\jdk-17"
 $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 java -version
-
 
 
 *2. Run tests:*
@@ -18,7 +17,6 @@ java -version
 *3. To start the app in dev mode:*
 
 .\mvnw.cmd quarkus:dev
-
 
 
 ### Note

@@ -7,6 +7,7 @@ import com.fulfilment.application.monolith.warehouses.domain.ports.ReplaceWareho
 import com.fulfilment.application.monolith.warehouses.domain.ports.WarehouseStore;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
@@ -26,6 +27,7 @@ public class ReplaceWarehouseUseCase implements ReplaceWarehouseOperation {
     }
 
   @Override
+  @Transactional
   public void replace(String businessUnitCode, Warehouse newWarehouse) {
     // TODO implement this method
 
