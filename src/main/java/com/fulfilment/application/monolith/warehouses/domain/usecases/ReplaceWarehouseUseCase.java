@@ -7,6 +7,7 @@ import com.fulfilment.application.monolith.warehouses.domain.ports.ReplaceWareho
 import com.fulfilment.application.monolith.warehouses.domain.ports.WarehouseStore;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
@@ -16,14 +17,17 @@ public class ReplaceWarehouseUseCase implements ReplaceWarehouseOperation {
 
   private final WarehouseStore warehouseStore;
   private final ArchiveWarehouseOperation archiveWarehouseOperation;
+  private final CreateWarehouseUseCase createWarehouseUseCase;
 
   @Inject
-  public ReplaceWarehouseUseCase(WarehouseStore warehouseStore, ArchiveWarehouseOperation archiveWarehouseOperation) {
+  public ReplaceWarehouseUseCase(WarehouseStore warehouseStore, ArchiveWarehouseOperation archiveWarehouseOperation, CreateWarehouseUseCase createWarehouseUseCase) {
     this.warehouseStore = warehouseStore;
     this.archiveWarehouseOperation = archiveWarehouseOperation;
-  }
+      this.createWarehouseUseCase = createWarehouseUseCase;
+    }
 
   @Override
+  @Transactional
   public void replace(String businessUnitCode, Warehouse newWarehouse) {
     // TODO implement this method
 
@@ -45,7 +49,7 @@ public class ReplaceWarehouseUseCase implements ReplaceWarehouseOperation {
     archiveWarehouseOperation.archive(currentWarehouse);
 
     newWarehouse.setBusinessUnitCode(businessUnitCode);
-    Warehouse createdWarehouse = warehouseStore.create(newWarehouse);
+    Warehouse createdWarehouse = createWarehouseUseCase.create(newWarehouse);
     createdWarehouse.setStock(currentWarehouse.getStock()); // Stock transferred and matched
     warehouseStore.update(createdWarehouse);
   }
